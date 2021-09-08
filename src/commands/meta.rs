@@ -371,7 +371,7 @@ pub async fn source(ctx: Context<'_>) -> Result<()> {
             embed.field("Blank Lines", code_info[0]["Blank"].to_string(), true);
             embed.field(
                 "License",
-                "[GNU GPL v3](https://github.com/MrDogeBroTutorials/dogeflow/blob/HEAD/LICENSE)",
+                "[GNU GPL v3](https://github.com/MrDogeBro-Tutorials/dogeflow/blob/HEAD/LICENSE)",
                 false,
             );
 
@@ -381,7 +381,7 @@ pub async fn source(ctx: Context<'_>) -> Result<()> {
             c.create_action_row(|ar| {
                 ar.create_button(|b| {
                     b.style(ButtonStyle::Link);
-                    b.url("https://github.com/MrDogeBroTutorials/dogeflow");
+                    b.url("https://github.com/MrDogeBro-Tutorials/dogeflow");
                     b.label("View on GitHub");
 
                     b
