@@ -245,7 +245,7 @@ pub async fn help(
             .await;
 
         if let Some(mci) = mci {
-            let mut msg = mci.message.clone().regular().unwrap();
+            let mut msg = mci.message.clone();
 
             if mci.data.values.is_empty() {
                 mci.create_interaction_response(ctx.discord(), |ir| {
