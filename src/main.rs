@@ -84,7 +84,7 @@ async fn listener(
                 println!("Commands unregistered (develop)");
 
                 let mut commands_builder = CreateApplicationCommands::default();
-                let commands = &framework.options().slash_options.commands;
+                let commands = &framework.options().application_options.commands;
 
                 for cmd in commands {
                     commands_builder.create_application_command(|f| cmd.create(f));
@@ -107,7 +107,7 @@ async fn listener(
                 println!("Commands unregistered");
 
                 let mut commands_builder = CreateApplicationCommands::default();
-                let commands = &framework.options().slash_options.commands;
+                let commands = &framework.options().application_options.commands;
 
                 for cmd in commands {
                     commands_builder.create_application_command(|f| cmd.create(f));
@@ -120,11 +120,27 @@ async fn listener(
 
                 println!("Commands registered");
             }
-
-            Ok(())
         }
-        _ => Ok(()),
+        poise::Event::Message { new_message, .. } => {
+            if new_message.id == state.config.env.support_channel_id {
+                let new_ctx = poise::PrefixContext {
+                    data: state,
+                    discord: ctx,
+                    msg: new_message,
+                    framework,
+                    command: None,
+                };
+                commands::support::create_new(
+                    poise::Context::Prefix(new_ctx),
+                    new_message.to_owned(),
+                )
+                .await?;
+            }
+        }
+        _ => {}
     }
+
+    Ok(())
 }
 
 async fn on_error(error: Error, ctx: poise::ErrorContext<'_, State, Error>) {
