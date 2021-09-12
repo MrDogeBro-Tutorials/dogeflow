@@ -122,7 +122,9 @@ async fn listener(
             }
         }
         poise::Event::Message { new_message, .. } => {
-            if new_message.id == state.config.env.support_channel_id {
+            if new_message.channel_id == state.config.env.support_channel_id
+                && !new_message.author.bot
+            {
                 let new_ctx = poise::PrefixContext {
                     data: state,
                     discord: ctx,
