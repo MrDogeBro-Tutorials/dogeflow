@@ -19,6 +19,8 @@ pub struct Env {
     pub hub_server_id: u64,
     pub hub_stdout_id: u64,
     pub support_channel_id: u64,
+    pub helper_role_id: u64,
+    pub staff_role_id: u64,
 }
 
 impl Config {
@@ -57,6 +59,8 @@ impl Env {
             hub_server_id: var("HUB_SERVER_ID")?.parse()?,
             hub_stdout_id: var("HUB_STDOUT_ID")?.parse()?,
             support_channel_id: var("SUPPORT_CHANNEL_ID")?.parse()?,
+            helper_role_id: var("HELPER_ROLE_ID")?.parse()?,
+            staff_role_id: var("STAFF_ROLE_ID")?.parse()?,
         })
     }
 }
