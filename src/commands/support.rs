@@ -3,7 +3,7 @@ use anyhow::Result;
 use serenity::futures::{future, StreamExt};
 use serenity::model::{
     channel::{ChannelType, Message},
-    id::{ChannelId, GuildId, RoleId},
+    id::{ChannelId, RoleId},
 };
 use uuid::Uuid;
 
@@ -30,7 +30,25 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
         })
         .await?;
 
-    let helpers = GuildId(*message.guild_id.unwrap().as_u64())
+    Ok(())
+}
+
+// ========================================================================================
+//                                  Call Command
+// ========================================================================================
+
+/// Shows information about the bot
+///
+/// Shows information about the bot, inviting it, etc. ```
+/// <<prefix>>info
+/// ```
+#[poise::command(slash_command)]
+pub async fn call(ctx: Context<'_>) -> Result<()> {
+    let thread = ctx.channel_id();
+
+    let helpers = ctx
+        .guild_id()
+        .unwrap()
         .members_iter(&ctx.discord().http)
         .filter(|u| {
             if let Some(u) = u.as_ref().ok() {
@@ -50,6 +68,11 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
             .add_thread_member(&ctx.discord().http, helper.user.id)
             .await?;
     }
+
+    poise::send_reply(ctx, |m| {
+        m.content("The helpers have been called to your support case.")
+    })
+    .await?;
 
     Ok(())
 }
