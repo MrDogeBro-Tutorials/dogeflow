@@ -2,10 +2,14 @@ use super::Context;
 use anyhow::Result;
 use serenity::futures::{future, StreamExt};
 use serenity::model::{
-    channel::{ChannelType, Message},
+    channel::{ChannelType, GuildChannel, Message},
     id::{ChannelId, RoleId},
 };
 use uuid::Uuid;
+
+// ========================================================================================
+//                                  Create Support Thread
+// ========================================================================================
 
 pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
     let uuid: String = Uuid::new_v4().to_string()[..6].to_string();
@@ -44,7 +48,12 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
 /// ```
 #[poise::command(slash_command)]
 pub async fn call(ctx: Context<'_>) -> Result<()> {
-    let thread = ctx.channel_id();
+    let thread_id = ctx.channel_id();
+    let thread: GuildChannel = thread_id
+        .to_channel(&ctx.discord().http)
+        .await?
+        .guild()
+        .unwrap();
 
     let helpers = ctx
         .guild_id()
@@ -61,10 +70,19 @@ pub async fn call(ctx: Context<'_>) -> Result<()> {
             }
         });
 
+    if thread.kind != ChannelType::PublicThread || !thread.name.starts_with("case-") {
+        poise::send_reply(ctx, |m| {
+            m.content("The call command can only be used within support cases.")
+        })
+        .await?;
+
+        return Ok(());
+    }
+
     for h in helpers.collect::<Vec<_>>().await.iter() {
         let helper = h.as_ref().unwrap();
 
-        thread
+        thread_id
             .add_thread_member(&ctx.discord().http, helper.user.id)
             .await?;
     }
