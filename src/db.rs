@@ -13,6 +13,7 @@ impl Database {
             "CREATE TABLE IF NOT EXISTS support (
                 id text NOT NULL PRIMARY KEY,
                 owner_id integer NOT NULL,
+                thread_id text NOT NULL,
                 created_at text NOT NULL,
                 language text DEFAULT 'Unknown',
                 title text DEFAULT 'Unknown'
