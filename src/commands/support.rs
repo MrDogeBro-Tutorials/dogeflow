@@ -1,6 +1,6 @@
 use super::Context;
 use anyhow::Result;
-use chrono::{prelude::Utc, SecondsFormat};
+use chrono::{prelude::Utc, DateTime, Duration, SecondsFormat};
 use serenity::futures::{future, StreamExt};
 use serenity::model::{
     channel::{ChannelType, GuildChannel, Message},
@@ -26,8 +26,8 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
         })
         .await?;
 
-    ctx.data().db.lock().unwrap().conn.
-        execute("INSERT INTO support (id, owner_id, thread_id, created_at) VALUES (:id, :owid, :thid, :creat)",
+    ctx.data().db.lock().unwrap().conn.execute(
+        "INSERT INTO support (id, owner_id, thread_id, created_at) VALUES (:id, :owid, :thid, :creat)",
             &[(":id", &uuid),
             (":owid", &message.author.id.as_u64().to_string()),
             (":thid", &thread.id.as_u64().to_string()),
@@ -62,6 +62,7 @@ pub async fn call(ctx: Context<'_>) -> Result<()> {
         .await?
         .guild()
         .unwrap();
+    let mut query_successful: bool = false;
 
     let helpers = ctx
         .guild_id()
@@ -85,6 +86,35 @@ pub async fn call(ctx: Context<'_>) -> Result<()> {
         .await?;
 
         return Ok(());
+    }
+
+    let created_at: String = match ctx.data().db.lock().unwrap().conn.query_row_and_then(
+        "SELECT created_at FROM support WHERE id = ?",
+        [thread.name[5..].to_string()],
+        |r| r.get(0),
+    ) {
+        Ok(timestamp) => {
+            query_successful = true;
+            timestamp
+        }
+        Err(_) => "Unable to get `created_at` for the current support case.".to_string(),
+    };
+
+    if query_successful {
+        let duration: Duration = Utc::now() - created_at.parse::<DateTime<Utc>>()?;
+
+        if duration.num_minutes() < 30 {
+            poise::send_reply(ctx, |m| {
+                m.content(
+                    "You cannot call the helpers until at least 30m after opening your support case! \
+                  We do this because all of our staff team is volunteers and we want to give them \
+                  a chance to see and respond to your support case first before pinging them.",
+                )
+            })
+            .await?;
+
+            return Ok(());
+        }
     }
 
     for h in helpers.collect::<Vec<_>>().await.iter() {
