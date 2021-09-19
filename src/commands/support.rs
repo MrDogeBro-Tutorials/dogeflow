@@ -49,10 +49,10 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
 //                                  Call Command
 // ========================================================================================
 
-/// Shows information about the bot
+/// Calls the helpers to your support case.
 ///
-/// Shows information about the bot, inviting it, etc. ```
-/// <<prefix>>info
+/// Calls the helpers to your support case. However, this command cannot be used unless it has been at least 30m since the case opened. ```
+/// <<prefix>>call
 /// ```
 #[poise::command(slash_command)]
 pub async fn call(ctx: Context<'_>) -> Result<()> {
