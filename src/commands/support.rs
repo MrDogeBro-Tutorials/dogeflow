@@ -1,5 +1,6 @@
 use super::Context;
 use anyhow::Result;
+use chrono::{prelude::Utc, SecondsFormat};
 use serenity::futures::{future, StreamExt};
 use serenity::model::{
     channel::{ChannelType, GuildChannel, Message},
@@ -23,8 +24,15 @@ pub async fn create_new(ctx: Context<'_>, message: Message) -> Result<()> {
 
             t
         })
-        .await?
-        .id;
+        .await?;
+
+    ctx.data().db.lock().unwrap().conn.
+        execute("INSERT INTO support (id, owner_id, thread_id, created_at) VALUES (:id, :owid, :thid, :creat)",
+            &[(":id", &uuid),
+            (":owid", &message.author.id.as_u64().to_string()),
+            (":thid", &thread.id.as_u64().to_string()),
+            (":creat", &Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true))]
+        )?;
 
     support_channel
         .send_message(&ctx.discord().http, |m| {
