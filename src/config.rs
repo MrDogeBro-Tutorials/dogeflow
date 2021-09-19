@@ -6,6 +6,7 @@ use std::time::Duration;
 #[derive(Clone)]
 pub struct Config {
     pub env: Env,
+    pub data_path: DataPath,
 }
 
 #[derive(Clone)]
@@ -23,9 +24,21 @@ pub struct Env {
     pub staff_role_id: u64,
 }
 
+#[derive(Clone)]
+pub struct DataPath {
+    pub dynamic: String,
+}
+
 impl Config {
     pub fn load() -> Result<Self> {
-        Ok(Self { env: Env::load()? })
+        let base_data_path = "data";
+
+        Ok(Self {
+            env: Env::load()?,
+            data_path: DataPath {
+                dynamic: format!("{}/dynamic", base_data_path),
+            },
+        })
     }
 }
 
