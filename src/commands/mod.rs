@@ -13,7 +13,7 @@ pub fn command_list(
     options.command(meta::source(), |f| f.category("Meta"));
 
     options.command(support::call(), |f| f.category("Support"));
-    options.command(support::close(), |f| f.category("Support"));
+    // options.command(support::close(), |f| f.category("Support"));
 
     Ok(options)
 }
