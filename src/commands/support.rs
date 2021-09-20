@@ -178,6 +178,23 @@ pub async fn close(ctx: Context<'_>) -> Result<()> {
         return Ok(());
     }
 
+    if ctx.author().id.as_u64() != &owner_id
+        && !ctx
+            .author()
+            .has_role(
+                &ctx.discord().http,
+                ctx.guild_id().unwrap(),
+                RoleId(ctx.data().config.env.helper_role_id),
+            )
+            .await?
+    {
+        poise::send_reply(ctx, |m| {
+            m.content("Only the support case author and staff members can close a support case!")
+        })
+        .await?;
+        return Ok(());
+    }
+
     poise::send_reply(ctx, |m| {
         m.content("This support case has been closed and can only be re-opened by a staff member.")
     })
