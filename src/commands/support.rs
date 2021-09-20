@@ -132,3 +132,56 @@ pub async fn call(ctx: Context<'_>) -> Result<()> {
 
     Ok(())
 }
+
+// ========================================================================================
+//                                  Close Command
+// ========================================================================================
+
+/// Closes your support case.
+///
+/// Closes your support case so its not just sitting open even though it is done. ```
+/// <<prefix>>close
+/// ```
+#[poise::command(slash_command)]
+pub async fn close(ctx: Context<'_>) -> Result<()> {
+    let thread_id = ctx.channel_id();
+    let thread: GuildChannel = thread_id
+        .to_channel(&ctx.discord().http)
+        .await?
+        .guild()
+        .unwrap();
+    let mut query_successful: bool = false;
+
+    if thread.kind != ChannelType::PublicThread || !thread.name.starts_with("case-") {
+        poise::send_reply(ctx, |m| {
+            m.content("The close command can only be used within support cases.")
+        })
+        .await?;
+
+        return Ok(());
+    }
+
+    let owner_id: u64 = match ctx.data().db.lock().unwrap().conn.query_row_and_then(
+        "SELECT owner_id FROM support WHERE id = ?",
+        [thread.name[5..].to_string()],
+        |r| r.get(0),
+    ) {
+        Ok(owner) => {
+            query_successful = true;
+            owner
+        }
+        Err(_) => 0,
+    };
+
+    if !query_successful {
+        poise::send_reply(ctx, |m| m.content("Unable to get the owner of this support case. As a result, the support case must manually be closed by staff.")).await?;
+        return Ok(());
+    }
+
+    poise::send_reply(ctx, |m| {
+        m.content("This support case has been closed and can only be re-opened by a staff member.")
+    })
+    .await?;
+
+    Ok(())
+}
