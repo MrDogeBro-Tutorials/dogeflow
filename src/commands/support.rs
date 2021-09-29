@@ -195,6 +195,11 @@ pub async fn close(ctx: Context<'_>) -> Result<()> {
         return Ok(());
     }
 
+    thread.edit_thread(ctx.discord(), |t| {
+        t.archived(true);
+        t.locked(true)
+    });
+
     poise::send_reply(ctx, |m| {
         m.content("This support case has been closed and can only be re-opened by a staff member.")
     })
