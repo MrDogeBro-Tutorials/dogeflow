@@ -16,7 +16,8 @@ impl Database {
                 thread_id text NOT NULL,
                 created_at text NOT NULL,
                 language text DEFAULT 'Unknown',
-                title text DEFAULT 'Unknown'
+                title text DEFAULT 'Unknown',
+                status text DEFAULT 'open'
             )",
             [],
         )?;
