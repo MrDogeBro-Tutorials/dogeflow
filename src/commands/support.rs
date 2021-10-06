@@ -249,6 +249,23 @@ pub async fn case_from_message(
         .add_thread_member(&ctx.discord().http, ctx.author().id)
         .await?;
 
+    thread
+        .send_message(&ctx.discord().http, |m| {
+            m.embed(|embed| {
+                embed.title("Original Message");
+                embed.description(&msg.content);
+                embed.color(ctx.data().config.env.default_embed_color);
+                embed.field(
+                    "Context",
+                    format!("[Jump to Original]({})", msg.link()),
+                    false,
+                );
+
+                embed
+            })
+        })
+        .await?;
+
     ctx.data().db.lock().unwrap().conn.execute(
         "INSERT INTO support (id, owner_id, thread_id, created_at) VALUES (:id, :owid, :thid, :creat)",
             &[(":id", &uuid),
