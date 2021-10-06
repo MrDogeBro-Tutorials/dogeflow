@@ -187,6 +187,14 @@ pub async fn close(ctx: Context<'_>) -> Result<()> {
                 RoleId(ctx.data().config.env.helper_role_id),
             )
             .await?
+        && !ctx
+            .author()
+            .has_role(
+                &ctx.discord().http,
+                ctx.guild_id().unwrap(),
+                RoleId(ctx.data().config.env.staff_role_id),
+            )
+            .await?
     {
         poise::send_reply(ctx, |m| {
             m.content("Only the support case author and staff members can close a support case!")
