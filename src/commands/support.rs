@@ -225,6 +225,30 @@ pub async fn case_from_message(
     let uuid: String = Uuid::new_v4().to_string()[..6].to_string();
     let support_channel = ChannelId(ctx.data().config.env.support_channel_id);
 
+    if !ctx
+        .author()
+        .has_role(
+            &ctx.discord().http,
+            ctx.guild_id().unwrap(),
+            RoleId(ctx.data().config.env.helper_role_id),
+        )
+        .await?
+        && !ctx
+            .author()
+            .has_role(
+                &ctx.discord().http,
+                ctx.guild_id().unwrap(),
+                RoleId(ctx.data().config.env.staff_role_id),
+            )
+            .await?
+    {
+        poise::send_reply(ctx, |m| {
+            m.content("Only staff members may create a support case from a message!")
+        })
+        .await?;
+        return Ok(());
+    }
+
     let thread_msg = support_channel
         .send_message(&ctx.discord().http, |m| {
             m.content(format!(
