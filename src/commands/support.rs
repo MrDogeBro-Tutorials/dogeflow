@@ -209,3 +209,55 @@ pub async fn close(ctx: Context<'_>) -> Result<()> {
 
     Ok(())
 }
+
+// ========================================================================================
+//                                  Support Case From Message
+// ========================================================================================
+
+/// Creates a support case from a message.
+///
+/// Allows staff members to create a support case from an existing message. This is an context menu command only.
+#[poise::command(context_menu_command = "Move to support case")]
+pub async fn case_from_message(
+    ctx: Context<'_>,
+    #[description = "Message to move to support case"] msg: Message,
+) -> Result<()> {
+    let uuid: String = Uuid::new_v4().to_string()[..6].to_string();
+    let support_channel = ChannelId(ctx.data().config.env.support_channel_id);
+
+    let thread_msg = support_channel
+        .send_message(&ctx.discord().http, |m| {
+            m.content(format!(
+                "{}, your message has moved to new support case by a staff member.",
+                ctx.author().name
+            ))
+        })
+        .await?;
+
+    let thread = support_channel
+        .create_public_thread(&ctx.discord().http, thread_msg.id, |t| {
+            t.name("case-".to_string() + &uuid);
+            t.auto_archive_duration(1440);
+            t.kind(ChannelType::PublicThread);
+
+            t
+        })
+        .await?;
+
+    thread
+        .id
+        .add_thread_member(&ctx.discord().http, ctx.author().id)
+        .await?;
+
+    ctx.data().db.lock().unwrap().conn.execute(
+        "INSERT INTO support (id, owner_id, thread_id, created_at) VALUES (:id, :owid, :thid, :creat)",
+            &[(":id", &uuid),
+            (":owid", &ctx.author().id.as_u64().to_string()),
+            (":thid", &thread.id.as_u64().to_string()),
+            (":creat", &Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true))]
+        )?;
+
+    poise::send_reply(ctx, |m| m.content("Support case created from message.")).await?;
+
+    Ok(())
+}
