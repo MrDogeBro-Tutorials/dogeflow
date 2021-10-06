@@ -14,6 +14,7 @@ pub fn command_list(
 
     options.command(support::call(), |f| f.category("Support"));
     options.command(support::close(), |f| f.category("Support"));
+    options.command(support::case_from_message(), |f| f.category("Support"));
 
     Ok(options)
 }
